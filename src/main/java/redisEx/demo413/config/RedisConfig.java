@@ -60,7 +60,7 @@ public class RedisConfig {
         RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
                         new GenericJackson2JsonRedisSerializer())) // Value Serializer 변경(JSON 형태로 직렬화)
-                .disableCachingNullValues() //데이터가 null일 경우 caching 하지 않음
+                //데이터가 null일 경우 caching 하지 않음
                 .entryTtl(Duration.ofMinutes(30L)); //유효기간 설정
 
         builder.cacheDefaults(configuration);

@@ -1,18 +1,28 @@
 package redisEx.demo413.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.cache.CacheProperties;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import java.time.Duration;
+
 @RequiredArgsConstructor
 @Configuration
+@EnableCaching
 @EnableRedisRepositories //Redis를 사용함을 명시하는 어노테이션
 /* Redis와의 연결 정보를 설정하고, Redis 데이터를 저장하고 조회하는 데 사용되는
 RedisTemplate 객체를 생성하는 역할을 하는 클래스*/
@@ -42,5 +52,19 @@ public class RedisConfig {
         return redisTemplate;
     }
 
+    @Bean
+    public CacheManager cacheManager(){
+        RedisCacheManager.RedisCacheManagerBuilder builder =
+                RedisCacheManager.RedisCacheManagerBuilder.fromConnectionFactory(redisConnectionFactory());
 
+        RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig()
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
+                        new GenericJackson2JsonRedisSerializer())) // Value Serializer 변경(JSON 형태로 직렬화)
+                .disableCachingNullValues() //데이터가 null일 경우 caching 하지 않음
+                .entryTtl(Duration.ofMinutes(30L)); //유효기간 설정
+
+        builder.cacheDefaults(configuration);
+
+        return builder.build();
+    }
 }
